@@ -135,6 +135,7 @@ function default_settings() {
   FORMAT=",efitype=4m"
   MACHINE=""
   DISK_CACHE=""
+  DISK_SIZE="8"
   HN="docker"
   CPU_TYPE=""
   CORE_COUNT="2"
@@ -147,6 +148,7 @@ function default_settings() {
   echo -e "${DGN}Using Virtual Machine ID: ${BGN}${VMID}${CL}"
   echo -e "${DGN}Using Machine Type: ${BGN}i440fx${CL}"
   echo -e "${DGN}Using Disk Cache: ${BGN}None${CL}"
+  echo -e "${DGN}Using Disk Size: ${BGN}${DISK_SIZE}${CL}"
   echo -e "${DGN}Using Hostname: ${BGN}${HN}${CL}"
   echo -e "${DGN}Using CPU Model: ${BGN}KVM64${CL}"
   echo -e "${DGN}Allocated Cores: ${BGN}${CORE_COUNT}${CL}"
@@ -258,6 +260,16 @@ function advanced_settings() {
     exit-script
   fi
 
+  if DISK_SIZE=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Disk Size in GB" 8 58 8 --title "DISK SIZE" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
+    if [ -z $DISK_SIZE ]; then
+      DISK_SIZE="8"
+      echo -e "${DGN}Disk Size: ${BGN}$DISK_SIZE${CL}"
+    else
+      echo -e "${DGN}Disk Size: ${BGN}$DISK_SIZE${CL}"
+    fi
+  else
+    exit-script
+  fi
   if BRG=$(whiptail --backtitle "Proxmox VE Helper Scripts" --inputbox "Set a Bridge" 8 58 vmbr0 --title "BRIDGE" --cancel-button Exit-Script 3>&1 1>&2 2>&3); then
     if [ -z $BRG ]; then
       BRG="vmbr0"
@@ -425,7 +437,7 @@ qm set $VMID \
   -scsi0 ${DISK1_REF},${DISK_CACHE}${THIN}size=2G \
   -boot order=scsi0 \
   -serial0 socket >/dev/null
-qm resize $VMID scsi0 8G >/dev/null
+qm resize $VMID scsi0 ${DISK_SIZE}G >/dev/null
 qm set $VMID --agent enabled=1 >/dev/null
 
   DESCRIPTION=$(cat <<EOF
